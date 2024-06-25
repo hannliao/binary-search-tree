@@ -17,7 +17,7 @@ export default class Tree {
     return root;
   }
 
-  prettyPrint(node, prefix = '', isLeft = true) {
+  prettyPrint(node = this.root, prefix = '', isLeft = true) {
     if (node === null) {
       return;
     }
@@ -57,7 +57,7 @@ export default class Tree {
       if (node.left === null || node.right === null) {
         node = node.left ?? node.right;
       } else {
-        const successor = findMin(node.right);
+        const successor = this.findMin(node.right);
         node.data = successor.data;
         node.right = this.deleteItem(successor.data, node.right);
       }
@@ -74,7 +74,6 @@ export default class Tree {
   }
 
   find(value, node = this.root) {
-    // return the node with the given value
     if (node === null) return node;
     if (node.data === value) {
       return node;
@@ -86,29 +85,71 @@ export default class Tree {
     }
   }
 
-  levelOrder(callback) {
-    // traverse the tree in breadth-first level order
+  levelOrder(node = this.root, callback) {
+    if (node === null) return node;
+    let queue = [node];
+    let result = [];
+    while (queue.length) {
+      let node = queue.shift();
+      callback ? callback(node.data) : result.push(node.data);
+      if (node.left !== null) queue.push(node.left);
+      if (node.right !== null) queue.push(node.right);
+    }
+    return callback ?? result;
   }
 
-  inOrder(callback) {}
+  inOrder(node = this.root, result = [], callback) {
+    if (node === null) return;
+    this.inOrder(node.left, result, callback);
+    callback ? callback(node.data) : result.push(node.data);
+    this.inOrder(node.right, result, callback);
+    return result;
+  }
 
-  preOrder(callback) {}
+  preOrder(node = this.root, result = [], callback) {
+    if (node === null) return node;
+    callback ? callback(node.data) : result.push(node.data);
+    this.inOrder(node.left, result, callback);
+    this.inOrder(node.right, result, callback);
+    return result;
+  }
 
-  postOrder(callback) {}
+  postOrder(node = this.root, result = [], callback) {
+    if (node === null) return node;
+    this.inOrder(node.left, result, callback);
+    this.inOrder(node.right, result, callback);
+    callback ? callback(node.data) : result.push(node.data);
+    return result;
+  }
 
   height(node) {
-    // returns the given node's height
+    if (node === null) return 0;
+    const leftHeight = this.height(node.left);
+    const rightHeight = this.height(node.right);
+
+    return Math.max(leftHeight + 1, rightHeight + 1);
   }
 
-  depth(node) {
-    // returns the given node's depth
+  depth(node, current = this.root, depth = 0) {
+    if (current === null) return 0;
+    if (current === node) return depth + 1;
+
+    const leftDepth = this.depth(node, current.left, depth + 1);
+    const rightDepth = this.depth(node, current.right, depth + 1);
+
+    return Math.max(leftDepth, rightDepth);
   }
 
-  isBalanced() {
-    // check if the tree is balanced
+  isBalanced(node = this.root) {
+    if (node === null) return;
+    const leftHeight = this.height(node.left);
+    const rightHeight = this.height(node.right);
+    if (Math.abs(leftHeight - rightHeight) > 1) return false;
+    return true;
   }
 
   rebalance() {
-    // rebalances an unbalanced tree
+    const sorted = this.inOrder();
+    this.root = this.buildTree(sorted);
   }
 }
